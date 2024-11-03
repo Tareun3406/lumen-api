@@ -8,6 +8,6 @@ host:
   hostNames:
     - "http://localhost:8080"
     - "http://localhost:3000"
-#logging:
-#  level:
-#    root: debug
+logging:
+  level:
+    root: debug

@@ -1,15 +1,15 @@
 package kr.tareun.lumenapi.message.remote
 
-import kr.tareun.lumenapi.message.remote.model.CreatedRoomVO
-import kr.tareun.lumenapi.message.remote.model.JoinRequestVO
-import kr.tareun.lumenapi.message.remote.model.JoinedRoomVO
-import kr.tareun.lumenapi.message.remote.model.MemberListVO
+import kr.tareun.lumenapi.message.remote.model.*
+import org.slf4j.LoggerFactory
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.messaging.simp.annotation.SendToUser
 import org.springframework.stereotype.Controller
+
+private val logger = LoggerFactory.getLogger(RemoteController::class.java)
 
 @Controller
 @MessageMapping("/remote") // /app/remote
@@ -19,8 +19,11 @@ class RemoteController(
 ) {
     @MessageMapping("/create")
     @SendToUser("/queue/created")
-    fun create(board: Map<String, Any>): CreatedRoomVO {
-        return remoteService.createRoom(board)
+    fun create(board: BoardVO): CreatedRoomVO {
+        logger.debug("received: {}", board);
+        val room = remoteService.createRoom(board);
+        logger.debug("result: {}", room);
+        return room
     }
 
     @MessageMapping("/joinAsCode")
@@ -35,7 +38,7 @@ class RemoteController(
     }
 
     @MessageMapping("/updateBoard")
-    fun updateBoard(@Payload board:Any, headerAccessor: SimpMessageHeaderAccessor) {
+    fun updateBoard(@Payload board: BoardVO, headerAccessor: SimpMessageHeaderAccessor) {
         val roomId = headerAccessor.getFirstNativeHeader("roomId") ?: ""
         val result = remoteService.updateBoard(board, roomId)
 

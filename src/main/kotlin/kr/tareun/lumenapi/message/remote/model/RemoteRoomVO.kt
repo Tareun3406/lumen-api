@@ -6,5 +6,5 @@ data class RemoteRoomVO(
     val observerList: MutableList<String>,
     val playerInviteCode: String,
     val observerInviteCode: String,
-    var board: Any
+    var board: BoardVO
 )

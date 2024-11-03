@@ -1,11 +1,11 @@
 package kr.tareun.lumenapi.message.remote
 
-import kr.tareun.lumenapi.message.remote.model.CreatedRoomVO
-import kr.tareun.lumenapi.message.remote.model.JoinedRoomVO
-import kr.tareun.lumenapi.message.remote.model.MemberListVO
-import kr.tareun.lumenapi.message.remote.model.RemoteRoomVO
+import kr.tareun.lumenapi.message.remote.model.*
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.UUID
+
+private val logger = LoggerFactory.getLogger(RemoteController::class.java)
 
 @Service
 class RemoteService {
@@ -16,17 +16,18 @@ class RemoteService {
 
     private val inviteCodeLength = 10;
 
-    fun createRoom(board: Map<String, Any>): CreatedRoomVO {
+    fun createRoom(board: BoardVO): CreatedRoomVO {
         val playerCode = generateInviteCode(inviteCodeLength, true)
         val observerCode = generateInviteCode(inviteCodeLength, false)
-
         val roomId = UUID.randomUUID().toString()
         val remoteRoom = RemoteRoomVO(roomId, mutableListOf(), mutableListOf(), playerCode, observerCode, board)
         roomMap[playerCode] = remoteRoom
         roomMap[observerCode] = remoteRoom
         roomIdMap[roomId] = remoteRoom
 
-        return CreatedRoomVO(roomId, playerCode, observerCode)
+        val result = CreatedRoomVO(roomId, playerCode, observerCode)
+        logger.debug("created: {}", result)
+        return result
     }
 
     fun findRoomAsInviteCode(name: String, inviteCode: String): JoinedRoomVO {
@@ -39,7 +40,7 @@ class RemoteService {
         var assignedName = name
         var dubNumber = 0
         if (playerList.contains(assignedName) || observerList.contains(assignedName)) {
-            while (!playerList.contains(assignedName + "_" + dubNumber) && !observerList.contains(assignedName + "_" + dubNumber)) {
+            while (playerList.contains(assignedName + "_" + dubNumber) && observerList.contains(assignedName + "_" + dubNumber)) {
                 dubNumber++
             }
             assignedName = assignedName + "_" + dubNumber
@@ -51,10 +52,10 @@ class RemoteService {
         return JoinedRoomVO(assignedName, room.roomId, playerList, observerList)
     }
 
-    fun updateBoard(board: Any, roomId: String): Any {
-        val room = roomIdMap[roomId] ?: return ""
+    fun updateBoard(board: BoardVO, roomId: String): BoardVO {
+        val room = roomIdMap[roomId] ?: return board;
         room.board = board
-        return room;
+        return room.board;
     }
 
     fun disconnect(roomId: String, userName: String): MemberListVO {
@@ -73,7 +74,7 @@ class RemoteService {
             inviteCode = (1..length)
                 .map { chars.random() }
                 .joinToString("")
-        } while (!playerCodeMap.containsKey(inviteCode))
+        } while (playerCodeMap.containsKey(inviteCode))
 
         playerCodeMap[inviteCode] = isPlayerCode
         return inviteCode
