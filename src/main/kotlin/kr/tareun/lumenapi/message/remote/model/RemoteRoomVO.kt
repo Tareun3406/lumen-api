@@ -2,6 +2,7 @@ package kr.tareun.lumenapi.message.remote.model
 
 data class RemoteRoomVO(
     val roomId: String,
+    val hostName: String,
     val playerList: MutableList<String>,
     val observerList: MutableList<String>,
     val playerInviteCode: String,

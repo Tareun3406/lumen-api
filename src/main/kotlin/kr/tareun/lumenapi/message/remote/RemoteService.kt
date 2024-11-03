@@ -16,11 +16,11 @@ class RemoteService {
 
     private val inviteCodeLength = 10;
 
-    fun createRoom(board: BoardVO): CreatedRoomVO {
+    fun createRoom(request: CreateRequestVO): CreatedRoomVO {
         val playerCode = generateInviteCode(inviteCodeLength, true)
         val observerCode = generateInviteCode(inviteCodeLength, false)
         val roomId = UUID.randomUUID().toString()
-        val remoteRoom = RemoteRoomVO(roomId, mutableListOf(), mutableListOf(), playerCode, observerCode, board)
+        val remoteRoom = RemoteRoomVO(roomId, request.hostName, mutableListOf(), mutableListOf(), playerCode, observerCode, request.board)
         roomMap[playerCode] = remoteRoom
         roomMap[observerCode] = remoteRoom
         roomIdMap[roomId] = remoteRoom
@@ -58,10 +58,16 @@ class RemoteService {
         return room.board;
     }
 
-    fun disconnect(roomId: String, userName: String): MemberListVO {
+    fun disconnect(userName: String, roomId: String): MemberListVO {
         val room = roomIdMap[roomId] ?: return MemberListVO(listOf(), listOf())
         room.playerList.remove(userName)
         room.observerList.remove(userName)
+
+        if (room.hostName == userName || room.playerList.isEmpty()) {
+            room.playerList.clear()
+            room.observerList.clear()
+            roomIdMap.remove(roomId)
+        }
 
         return MemberListVO(room.playerList, room.observerList)
     }

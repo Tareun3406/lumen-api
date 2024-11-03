@@ -2,6 +2,7 @@ package kr.tareun.lumenapi.message.remote
 
 import kr.tareun.lumenapi.message.remote.model.*
 import org.slf4j.LoggerFactory
+import org.springframework.messaging.handler.annotation.Header
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor
@@ -19,10 +20,8 @@ class RemoteController(
 ) {
     @MessageMapping("/create")
     @SendToUser("/queue/created")
-    fun create(board: BoardVO): CreatedRoomVO {
-        logger.debug("received: {}", board);
-        val room = remoteService.createRoom(board);
-        logger.debug("result: {}", room);
+    fun create(request: CreateRequestVO): CreatedRoomVO {
+        val room = remoteService.createRoom(request);
         return room
     }
 
@@ -40,8 +39,7 @@ class RemoteController(
     }
 
     @MessageMapping("/updateBoard")
-    fun updateBoard(@Payload board: BoardVO, headerAccessor: SimpMessageHeaderAccessor) {
-        val roomId = headerAccessor.getFirstNativeHeader("roomId") ?: ""
+    fun updateBoard(@Payload board: BoardVO, @Header("roomId") roomId: String) {
         val result = remoteService.updateBoard(board, roomId)
 
         val destination = "/topic/remote/${roomId}/updateBoard"
@@ -49,9 +47,13 @@ class RemoteController(
     }
 
     @MessageMapping("/disconnect")
-    fun disconnect(@Payload userName: String, headerAccessor: SimpMessageHeaderAccessor) {
-        val roomId = headerAccessor.getFirstNativeHeader("roomId") ?: ""
+    fun disconnect(@Payload userName: String, @Header("roomId") roomId: String) {
         val memberList = remoteService.disconnect(userName, roomId)
+
+        if (memberList.playerList.isEmpty()) {
+            val destination = "/topic/remote/${roomId}/disconnect"
+            messagingTemplate.convertAndSend(destination)
+        }
 
         val destination = "/topic/remote/${roomId}/memberList"
         messagingTemplate.convertAndSend(destination, memberList)
