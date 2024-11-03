@@ -28,12 +28,14 @@ class RemoteController(
 
     @MessageMapping("/joinAsCode")
     @SendToUser("/queue/joined")
-    fun joinUser(@Payload joinRequest: JoinRequestVO): JoinedRoomVO {
-        val roomInfo = remoteService.findRoomAsInviteCode(joinRequest.name, joinRequest.inviteCode)
+    fun joinUser(@Payload joinRequest: JoinRequestVO): JoinedRoomVO? {
+        val roomInfo = remoteService.findRoomAsInviteCode(joinRequest.name, joinRequest.inviteCode) ?: return null;
+
         val memberList = MemberListVO(roomInfo.playerList, roomInfo.observerList)
 
         val destination = "/topic/remote/${roomInfo.roomId}/memberList"
         messagingTemplate.convertAndSend(destination, memberList)
+
         return roomInfo
     }
 

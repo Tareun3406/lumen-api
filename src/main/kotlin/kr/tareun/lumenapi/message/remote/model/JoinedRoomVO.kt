@@ -5,4 +5,5 @@ data class JoinedRoomVO(
     val roomId: String,
     val playerList: List<String>,
     val observerList: List<String>,
+    val board: BoardVO
 )

@@ -30,9 +30,9 @@ class RemoteService {
         return result
     }
 
-    fun findRoomAsInviteCode(name: String, inviteCode: String): JoinedRoomVO {
+    fun findRoomAsInviteCode(name: String, inviteCode: String): JoinedRoomVO? {
         val isPlayer = playerCodeMap.containsKey(inviteCode)
-        val room = roomMap[inviteCode] ?: return JoinedRoomVO("", "", listOf(), listOf())
+        val room = roomMap[inviteCode] ?: return null
 
         val playerList = room.playerList
         val observerList = room.observerList
@@ -49,7 +49,7 @@ class RemoteService {
         if (isPlayer) playerList.add(assignedName)
         else observerList.add(assignedName)
 
-        return JoinedRoomVO(assignedName, room.roomId, playerList, observerList)
+        return JoinedRoomVO(assignedName, room.roomId, playerList, observerList, room.board);
     }
 
     fun updateBoard(board: BoardVO, roomId: String): BoardVO {
