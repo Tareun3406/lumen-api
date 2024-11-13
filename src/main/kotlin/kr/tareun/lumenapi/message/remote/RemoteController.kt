@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.messaging.handler.annotation.Header
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.messaging.handler.annotation.Payload
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.messaging.simp.annotation.SendToUser
 import org.springframework.stereotype.Controller
@@ -52,10 +51,16 @@ class RemoteController(
 
         if (memberList.playerList.isEmpty()) {
             val destination = "/topic/remote/${roomId}/disconnect"
-            messagingTemplate.convertAndSend(destination)
+            messagingTemplate.convertAndSend(destination, "")
         }
 
         val destination = "/topic/remote/${roomId}/memberList"
         messagingTemplate.convertAndSend(destination, memberList)
+    }
+
+    @MessageMapping("/timer")
+    fun triggerTimer(@Header("roomId") roomId: String, timerOn: Boolean) {
+        val destination = "/topic/remote/${roomId}/timer"
+        messagingTemplate.convertAndSend(destination, timerOn)
     }
 }
