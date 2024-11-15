@@ -52,7 +52,7 @@ class RemoteController(
 
         if (memberList.playerList.isEmpty()) {
             val destination = "/topic/remote/${roomId}/disconnect"
-            messagingTemplate.convertAndSend(destination, "")
+            messagingTemplate.convertAndSend(destination, "호스트가 연결을 종료하였습니다.")
         }
 
         val destination = "/topic/remote/${roomId}/memberList"

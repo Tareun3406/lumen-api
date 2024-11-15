@@ -22,7 +22,7 @@ class WebSocketEventListener(val remoteService: RemoteService, val messagingTemp
         val headerAccessor = StompHeaderAccessor.wrap(event.message)
         val sessionId = headerAccessor.sessionId ?: return
 
-        val memberList = remoteService.disconnect(sessionId) ?: return
+        val memberList = remoteService.handleConnectionList(sessionId) ?: return
 
         val destination = "/topic/remote/${memberList.roomId}/memberList"
         messagingTemplate.convertAndSend(destination, memberList)
