@@ -26,8 +26,9 @@ class RemoteController(
 
     @MessageMapping("/joinAsCode")
     @SendToUser("/queue/joined")
-    fun joinUser(@Payload joinRequest: JoinRequestVO): JoinedRoomVO? {
-        val roomInfo = remoteService.findRoomAsInviteCode(joinRequest.name, joinRequest.inviteCode) ?: return null;
+    fun joinUser(@Payload joinRequest: JoinRequestVO, @Header("simpSessionId") sessionId: String): JoinedRoomVO? {
+        logger.debug("Join SessionId: $sessionId")
+        val roomInfo = remoteService.findRoomAsInviteCode(joinRequest, sessionId) ?: return null;
 
         val memberList = MemberListVO(roomInfo.playerList, roomInfo.observerList)
 
@@ -46,8 +47,8 @@ class RemoteController(
     }
 
     @MessageMapping("/disconnect")
-    fun disconnect(@Payload userName: String, @Header("roomId") roomId: String) {
-        val memberList = remoteService.disconnect(userName, roomId)
+    fun disconnect(@Payload userName: String, @Header("roomId") roomId: String, @Header("simpSessionId") sessionId: String) {
+        val memberList = remoteService.disconnect(userName, roomId, sessionId)
 
         if (memberList.playerList.isEmpty()) {
             val destination = "/topic/remote/${roomId}/disconnect"
