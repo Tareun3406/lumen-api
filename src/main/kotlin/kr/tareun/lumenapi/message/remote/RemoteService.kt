@@ -40,7 +40,7 @@ class RemoteService {
 
         val playerList = room.playerList
         val observerList = room.observerList
-        var hostName = room.hostName
+        val hostName = room.hostName
 
         var assignedName = joinRequest.name
         var dubNumber = 0
@@ -53,7 +53,7 @@ class RemoteService {
 
         if (isPlayer) playerList.add(assignedName)
         else observerList.add(assignedName)
-        sessionIdUserInfoMap[sessionId] = SessionUserInfoVO(assignedName, room.roomId)
+        sessionIdUserInfoMap[sessionId] = SessionUserInfoVO(sessionId, assignedName, room.roomId)
 
         return JoinedRoomVO(assignedName, room.roomId, hostName, playerList, observerList, room.board, isPlayer)
     }
@@ -65,19 +65,21 @@ class RemoteService {
         return room.board;
     }
 
-    fun handleDisconnectedSessionList(sessionId: String): MemberListVO? {
-        val userInfo = sessionIdUserInfoMap[sessionId] ?: return null
+    fun getUserInfo(sessionId: String): SessionUserInfoVO?{
+        return sessionIdUserInfoMap[sessionId]
+    }
 
-        val room = roomIdMap[userInfo.joinedRoomId] ?: return MemberListVO(listOf(), listOf(), "")
+    fun handleDisconnectedSessionList(userInfo: SessionUserInfoVO): MemberListVO? {
+        val room = roomIdMap[userInfo.joinedRoomId] ?: return MemberListVO("", listOf(), listOf(), "")
         room.playerList.remove(userInfo.username)
         room.observerList.remove(userInfo.username)
-        sessionIdUserInfoMap.remove(sessionId)
+        sessionIdUserInfoMap.remove(userInfo.sessionId)
 
         if (room.playerList.isEmpty() && room.observerList.isEmpty()) {
             cleaningRoom(userInfo.joinedRoomId)
         }
 
-        return MemberListVO(room.playerList, room.observerList, room.roomId)
+        return MemberListVO(room.hostName, room.playerList, room.observerList, room.roomId)
     }
 
     fun cleaningRoom(roomId: String) {

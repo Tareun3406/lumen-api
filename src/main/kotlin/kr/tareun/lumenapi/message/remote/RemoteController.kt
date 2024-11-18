@@ -30,7 +30,13 @@ class RemoteController(
         logger.debug("Join SessionId: $sessionId")
         val roomInfo = remoteService.findRoomAsInviteCode(joinRequest, sessionId) ?: return ""
 
-        val memberList = MemberListVO(roomInfo.playerList, roomInfo.observerList, roomInfo.roomId)
+        val memberList = MemberListVO(roomInfo.hostName, roomInfo.playerList, roomInfo.observerList, roomInfo.roomId)
+
+        if (memberList.existHost() && joinRequest.name == roomInfo.hostName) {
+            val destination = "/topic/remote/${memberList.roomId}/notification"
+            val body = NotificationMessage(NotificationMessage.Status.INFO, "호스트와 다시 연결되었습니다.")
+            messagingTemplate.convertAndSend(destination, body)
+        }
 
         val destination = "/topic/remote/${roomInfo.roomId}/memberList"
         messagingTemplate.convertAndSend(destination, memberList)
@@ -45,6 +51,7 @@ class RemoteController(
         val destination = "/topic/remote/${roomId}/updateBoard"
         messagingTemplate.convertAndSend(destination, result)
     }
+
 
     @MessageMapping("/timer")
     fun triggerTimer(@Header("roomId") roomId: String, timerOn: Boolean) {
