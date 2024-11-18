@@ -46,19 +46,6 @@ class RemoteController(
         messagingTemplate.convertAndSend(destination, result)
     }
 
-    @MessageMapping("/disconnect")
-    fun disconnect(@Payload userName: String, @Header("roomId") roomId: String, @Header("simpSessionId") sessionId: String) {
-        val memberList = remoteService.disconnect(userName, roomId, sessionId)
-
-        if (memberList.playerList.isEmpty()) {
-            val destination = "/topic/remote/${roomId}/disconnect"
-            messagingTemplate.convertAndSend(destination, "호스트가 연결을 종료하였습니다.")
-        }
-
-        val destination = "/topic/remote/${roomId}/memberList"
-        messagingTemplate.convertAndSend(destination, memberList)
-    }
-
     @MessageMapping("/timer")
     fun triggerTimer(@Header("roomId") roomId: String, timerOn: Boolean) {
         val destination = "/topic/remote/${roomId}/timer"

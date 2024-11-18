@@ -65,28 +65,17 @@ class RemoteService {
         return room.board;
     }
 
-    fun disconnect(userName: String, roomId: String, sessionId: String): MemberListVO {
-        val room = roomIdMap[roomId] ?: return MemberListVO(listOf(), listOf(), "")
-        room.playerList.remove(userName)
-        room.observerList.remove(userName)
-        sessionIdUserInfoMap.remove(sessionId)
-
-        if (room.hostName == userName) {
-            room.playerList.clear()
-            room.observerList.clear()
-            cleaningRoom(roomId)
-        }
-
-        return MemberListVO(room.playerList, room.observerList, roomId)
-    }
-
-    fun handleConnectionList(sessionId: String): MemberListVO? {
+    fun handleDisconnectedSessionList(sessionId: String): MemberListVO? {
         val userInfo = sessionIdUserInfoMap[sessionId] ?: return null
 
         val room = roomIdMap[userInfo.joinedRoomId] ?: return MemberListVO(listOf(), listOf(), "")
         room.playerList.remove(userInfo.username)
         room.observerList.remove(userInfo.username)
         sessionIdUserInfoMap.remove(sessionId)
+
+        if (room.playerList.isEmpty() && room.observerList.isEmpty()) {
+            cleaningRoom(userInfo.joinedRoomId)
+        }
 
         return MemberListVO(room.playerList, room.observerList, room.roomId)
     }
