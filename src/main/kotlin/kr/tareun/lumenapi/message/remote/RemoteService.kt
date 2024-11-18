@@ -66,7 +66,7 @@ class RemoteService {
     }
 
     fun disconnect(userName: String, roomId: String, sessionId: String): MemberListVO {
-        val room = roomIdMap[roomId] ?: return MemberListVO(listOf(), listOf())
+        val room = roomIdMap[roomId] ?: return MemberListVO(listOf(), listOf(), "")
         room.playerList.remove(userName)
         room.observerList.remove(userName)
         sessionIdUserInfoMap.remove(sessionId)
@@ -83,12 +83,12 @@ class RemoteService {
     fun handleConnectionList(sessionId: String): MemberListVO? {
         val userInfo = sessionIdUserInfoMap[sessionId] ?: return null
 
-        val room = roomIdMap[userInfo.joinedRoomId] ?: return MemberListVO(listOf(), listOf())
+        val room = roomIdMap[userInfo.joinedRoomId] ?: return MemberListVO(listOf(), listOf(), "")
         room.playerList.remove(userInfo.username)
         room.observerList.remove(userInfo.username)
         sessionIdUserInfoMap.remove(sessionId)
 
-        return MemberListVO(room.playerList, room.observerList);
+        return MemberListVO(room.playerList, room.observerList, room.roomId)
     }
 
     fun cleaningRoom(roomId: String) {

@@ -26,11 +26,11 @@ class RemoteController(
 
     @MessageMapping("/joinAsCode")
     @SendToUser("/queue/joined")
-    fun joinUser(@Payload joinRequest: JoinRequestVO, @Header("simpSessionId") sessionId: String): JoinedRoomVO? {
+    fun joinUser(@Payload joinRequest: JoinRequestVO, @Header("simpSessionId") sessionId: String): Any {
         logger.debug("Join SessionId: $sessionId")
-        val roomInfo = remoteService.findRoomAsInviteCode(joinRequest, sessionId) ?: return null;
+        val roomInfo = remoteService.findRoomAsInviteCode(joinRequest, sessionId) ?: return ""
 
-        val memberList = MemberListVO(roomInfo.playerList, roomInfo.observerList)
+        val memberList = MemberListVO(roomInfo.playerList, roomInfo.observerList, roomInfo.roomId)
 
         val destination = "/topic/remote/${roomInfo.roomId}/memberList"
         messagingTemplate.convertAndSend(destination, memberList)
