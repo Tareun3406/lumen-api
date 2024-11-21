@@ -4,10 +4,12 @@ spring:
 server:
   servlet:
     context-path: /api
-host:
-  hostNames:
-    - "http://localhost:8080"
-    - "http://localhost:3000"
 logging:
   level:
     root: debug
+websocket:
+  allowedOrigins:
+    - "http://localhost:8080"
+    - "http://localhost:3000"
+remote:
+  inviteCodeLength: 4

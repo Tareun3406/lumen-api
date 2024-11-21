@@ -2,6 +2,7 @@ package kr.tareun.lumenapi.message.remote
 
 import kr.tareun.lumenapi.message.remote.model.*
 import org.slf4j.LoggerFactory
+import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.UUID
@@ -9,7 +10,9 @@ import java.util.UUID
 private val logger = LoggerFactory.getLogger(RemoteController::class.java)
 
 @Service
+@ConfigurationProperties(prefix = "remote")
 class RemoteService {
+    var inviteCodeLength: Int = 4
 
     // todo 맵 구조 개선
     private val roomJoinCodeMap = mutableMapOf<String, RemoteRoomVO>()
@@ -18,7 +21,7 @@ class RemoteService {
 
     private val sessionIdUserInfoMap = mutableMapOf<String, SessionUserInfoVO>()
 
-    private val inviteCodeLength = 10;
+
 
     fun createRoom(request: CreateRequestVO): CreatedRoomVO {
         val playerCode = generateInviteCode(inviteCodeLength, true)

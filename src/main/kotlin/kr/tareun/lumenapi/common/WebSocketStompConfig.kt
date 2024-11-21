@@ -12,23 +12,22 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @Configuration
 @EnableWebSocketMessageBroker
-@ConfigurationProperties(prefix = "host")
+@ConfigurationProperties(prefix = "websocket")
 class WebSocketStompConfig :WebSocketMessageBrokerConfigurer{
+    lateinit var allowedOrigins: Array<String>
 
     @Bean
     fun taskScheduler(): TaskScheduler {
         val scheduler = ThreadPoolTaskScheduler()
-        scheduler.poolSize = 5 // 동시에 실행 가능한 스레드 수
+        scheduler.poolSize = 1 // 동시에 실행 가능한 스레드 수
         scheduler.setThreadNamePrefix("WebSocketHeartbeat-")
         scheduler.initialize()
         return scheduler
     }
 
-    lateinit var hostNames: Array<String>
-
     override fun registerStompEndpoints(registry: StompEndpointRegistry) {
         registry.addEndpoint("/remote-ws")
-            .setAllowedOrigins(*hostNames)
+            .setAllowedOrigins(*allowedOrigins)
     }
 
     override fun configureMessageBroker(registry: MessageBrokerRegistry) {
