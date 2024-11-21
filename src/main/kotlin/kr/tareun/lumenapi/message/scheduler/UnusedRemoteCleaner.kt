@@ -15,7 +15,7 @@ class UnusedRemoteCleaner(val remoteService: RemoteService, val messagingTemplat
         val roomList = remoteService.getRoomIdSet()
         logger.info("remote room counts: ${roomList.size}")
 
-        val deleteTargetList = roomList.filter { it.needDelete(60) }
+        val deleteTargetList = roomList.filter { it.needDelete(45) }
         logger.info("deleting room counts: ${deleteTargetList.size}")
 
         deleteTargetList.forEach {

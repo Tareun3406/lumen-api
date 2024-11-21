@@ -34,7 +34,7 @@ class RemoteService {
         return result
     }
 
-    fun findRoomAsInviteCode(joinRequest: JoinRequestVO, sessionId: String): JoinedRoomVO? {
+    fun joinRoomAsInviteCode(joinRequest: JoinRequestVO, sessionId: String): JoinedRoomVO? {
         val isPlayer = playerCodeMap[joinRequest.inviteCode] ?: return null // todo 예외처리. 이하 같음
         val room = roomJoinCodeMap[joinRequest.inviteCode] ?: return null
 
@@ -42,20 +42,35 @@ class RemoteService {
         val observerList = room.observerList
         val hostName = room.hostName
 
-        var assignedName = joinRequest.name
-        var dubNumber = 0
-        if (playerList.contains(assignedName) || observerList.contains(assignedName)) {
-            while (playerList.contains(assignedName + "_" + dubNumber) && observerList.contains(assignedName + "_" + dubNumber)) {
-                dubNumber++
-            }
-            assignedName = assignedName + "_" + dubNumber
-        }
+        val assignedName = getSignedName(joinRequest.name, playerList, observerList)
 
-        if (isPlayer) playerList.add(assignedName)
-        else observerList.add(assignedName)
+        if (isPlayer) playerList.add(RoomMemberVO(assignedName, sessionId))
+        else observerList.add(RoomMemberVO(assignedName, sessionId))
         sessionIdUserInfoMap[sessionId] = SessionUserInfoVO(sessionId, assignedName, room.roomId)
 
-        return JoinedRoomVO(assignedName, room.roomId, hostName, playerList, observerList, room.board, isPlayer)
+        val playerNameList = playerList.map { it.name }
+        val observerNameList = observerList.map { it.name }
+        return JoinedRoomVO(assignedName, room.roomId, hostName, playerNameList, observerNameList, room.board, isPlayer)
+    }
+
+    fun joinWithReconnect(joinRequest: JoinRequestVO, sessionId: String): JoinedRoomVO? {
+        val isPlayer = playerCodeMap[joinRequest.inviteCode] ?: return null // todo 예외처리. 이하 같음
+        val room = roomJoinCodeMap[joinRequest.inviteCode] ?: return null
+
+        val memberList = if (isPlayer) room.playerList else room.observerList
+        val member = memberList.find { it.name == joinRequest.name }
+        if (member == null) {
+            memberList.add(RoomMemberVO(joinRequest.name, sessionId))
+        } else {
+            sessionIdUserInfoMap.remove(member.sessionId)
+            sessionIdUserInfoMap.put(sessionId, SessionUserInfoVO(sessionId, joinRequest.name, room.roomId))
+            member.sessionId = sessionId
+        }
+        sessionIdUserInfoMap[sessionId] = SessionUserInfoVO(sessionId, joinRequest.name, room.roomId)
+
+        val playerNameList = room.playerList.map { it.name }
+        val observerNameList = room.observerList.map { it.name }
+        return JoinedRoomVO(joinRequest.name, room.roomId, room.hostName, playerNameList, observerNameList, room.board, isPlayer)
     }
 
     fun updateBoard(board: BoardVO, roomId: String): BoardVO {
@@ -71,15 +86,17 @@ class RemoteService {
 
     fun handleDisconnectedSessionList(userInfo: SessionUserInfoVO): MemberListVO? {
         val room = roomIdMap[userInfo.joinedRoomId] ?: return MemberListVO("", listOf(), listOf(), "")
-        room.playerList.remove(userInfo.username)
-        room.observerList.remove(userInfo.username)
+        room.playerList.removeIf { it.sessionId == userInfo.sessionId || it.name == userInfo.username }
+        room.observerList.removeIf { it.sessionId == userInfo.sessionId || it.name == userInfo.username }
         sessionIdUserInfoMap.remove(userInfo.sessionId)
 
         if (room.playerList.isEmpty() && room.observerList.isEmpty()) {
             cleaningRoom(userInfo.joinedRoomId)
         }
 
-        return MemberListVO(room.hostName, room.playerList, room.observerList, room.roomId)
+        val playerNameList = room.playerList.map { it.name }
+        val observerNameList = room.observerList.map { it.name }
+        return MemberListVO(room.hostName, playerNameList, observerNameList, room.roomId)
     }
 
     fun cleaningRoom(roomId: String) {
@@ -93,6 +110,19 @@ class RemoteService {
 
     fun getRoomIdSet(): MutableCollection<RemoteRoomVO> {
         return roomIdMap.values
+    }
+
+    private fun getSignedName(username: String, playerList: List<RoomMemberVO>, observerList: List<RoomMemberVO>): String {
+        var assignedName = username
+        var dubNumber = 0
+        if (playerList.map { it.name }.contains(assignedName) || observerList.map { it.name }.contains(assignedName)) {
+            while (playerList.map { it.name }.contains(assignedName + "_" + dubNumber)
+                || observerList.map { it.name }.contains(assignedName + "_" + dubNumber)) {
+                dubNumber++
+            }
+            assignedName = assignedName + "_" + dubNumber
+        }
+        return assignedName
     }
 
     private fun generateInviteCode(length: Int, isPlayerCode: Boolean): String {

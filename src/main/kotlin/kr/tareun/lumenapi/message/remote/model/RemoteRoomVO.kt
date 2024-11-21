@@ -5,8 +5,8 @@ import java.time.LocalDateTime
 data class RemoteRoomVO(
     val roomId: String,
     val hostName: String,
-    val playerList: MutableList<String>,
-    val observerList: MutableList<String>,
+    val playerList: MutableList<RoomMemberVO>,
+    val observerList: MutableList<RoomMemberVO>,
     val playerInviteCode: String,
     val observerInviteCode: String,
     var board: BoardVO,

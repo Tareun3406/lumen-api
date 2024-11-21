@@ -28,9 +28,14 @@ class RemoteController(
     @SendToUser("/queue/joined")
     fun joinUser(@Payload joinRequest: JoinRequestVO, @Header("simpSessionId") sessionId: String): Any {
         logger.debug("Join SessionId: $sessionId")
-        val roomInfo = remoteService.findRoomAsInviteCode(joinRequest, sessionId) ?: return ""
+        val roomInfo =
+            if (joinRequest.isReconnect) remoteService.joinWithReconnect(joinRequest, sessionId) ?: return ""
+            else remoteService.joinRoomAsInviteCode(joinRequest, sessionId) ?: return ""
 
-        val memberList = MemberListVO(roomInfo.hostName, roomInfo.playerList, roomInfo.observerList, roomInfo.roomId)
+        val playerNameSet = roomInfo.playerList
+        val observerNameSet = roomInfo.observerList
+
+        val memberList = MemberListVO(roomInfo.hostName, playerNameSet, observerNameSet, roomInfo.roomId)
 
         if (memberList.existHost() && joinRequest.name == roomInfo.hostName) {
             val destination = "/topic/remote/${memberList.roomId}/notification"
