@@ -63,7 +63,7 @@ class RemoteService {
             memberList.add(RoomMemberVO(joinRequest.name, sessionId))
         } else {
             sessionIdUserInfoMap.remove(member.sessionId)
-            sessionIdUserInfoMap.put(sessionId, SessionUserInfoVO(sessionId, joinRequest.name, room.roomId))
+            sessionIdUserInfoMap[sessionId] = SessionUserInfoVO(sessionId, joinRequest.name, room.roomId)
             member.sessionId = sessionId
         }
         sessionIdUserInfoMap[sessionId] = SessionUserInfoVO(sessionId, joinRequest.name, room.roomId)
