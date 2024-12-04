@@ -77,10 +77,10 @@ class RemoteService {
     }
 
     fun updateBoard(board: BoardVO, roomId: String): BoardVO {
-        val room = roomIdMap[roomId] ?: return board;
+        val room = roomIdMap[roomId] ?: return board
         room.board = board
         room.lastUpdateTime = LocalDateTime.now()
-        return room.board;
+        return room.board
     }
 
     fun getUserInfo(sessionId: String): SessionUserInfoVO?{

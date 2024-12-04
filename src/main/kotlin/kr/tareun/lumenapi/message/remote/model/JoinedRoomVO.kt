@@ -7,5 +7,5 @@ data class JoinedRoomVO(
     val playerList: List<String>,
     val observerList: List<String>,
     val board: BoardVO,
-    val isPlayer: Boolean
+    val hasControl: Boolean
 )
