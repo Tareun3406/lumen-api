@@ -28,6 +28,7 @@ class RemoteService {
         val observerCode = generateInviteCode(inviteCodeLength, false)
         val roomId = UUID.randomUUID().toString()
         val remoteRoom = RemoteRoomVO(roomId, request.hostName, mutableListOf(), mutableListOf(), playerCode, observerCode, request.board, LocalDateTime.now())
+
         roomJoinCodeMap[playerCode] = remoteRoom
         roomJoinCodeMap[observerCode] = remoteRoom
         roomIdMap[roomId] = remoteRoom
@@ -43,7 +44,6 @@ class RemoteService {
 
         val playerList = room.playerList
         val observerList = room.observerList
-        val hostName = room.hostName
 
         val assignedName = getSignedName(joinRequest.name, playerList, observerList)
 
@@ -51,9 +51,7 @@ class RemoteService {
         else observerList.add(RoomMemberVO(assignedName, sessionId))
         sessionIdUserInfoMap[sessionId] = SessionUserInfoVO(sessionId, assignedName, room.roomId)
 
-        val playerNameList = playerList.map { it.name }
-        val observerNameList = observerList.map { it.name }
-        return JoinedRoomVO(assignedName, room.roomId, hostName, playerNameList, observerNameList, room.board, isPlayer)
+        return JoinedRoomVO.from(assignedName, room, isPlayer)
     }
 
     fun joinWithReconnect(joinRequest: JoinRequestVO, sessionId: String): JoinedRoomVO? {
@@ -71,9 +69,7 @@ class RemoteService {
         }
         sessionIdUserInfoMap[sessionId] = SessionUserInfoVO(sessionId, joinRequest.name, room.roomId)
 
-        val playerNameList = room.playerList.map { it.name }
-        val observerNameList = room.observerList.map { it.name }
-        return JoinedRoomVO(joinRequest.name, room.roomId, room.hostName, playerNameList, observerNameList, room.board, isPlayer)
+        return JoinedRoomVO.from(joinRequest.name, room, isPlayer)
     }
 
     fun updateBoard(board: BoardVO, roomId: String): BoardVO {
@@ -81,6 +77,15 @@ class RemoteService {
         room.board = board
         room.lastUpdateTime = LocalDateTime.now()
         return room.board
+    }
+
+    fun setTimer(roomId: String, timerRequest: TimerRequest): RoomTimerInfo {
+        val room = roomIdMap[roomId] ?: return RoomTimerInfo()
+        when (timerRequest.timerType) {
+            TimerType.GLOBAL -> room.timer.globalTimerEndTime.setTimeState(timerRequest.statusType)
+            TimerType.PHASE_GET -> room.timer.phaseGetTimerEndTime.setTimeState(timerRequest.statusType)
+        }
+        return room.timer
     }
 
     fun getUserInfo(sessionId: String): SessionUserInfoVO?{

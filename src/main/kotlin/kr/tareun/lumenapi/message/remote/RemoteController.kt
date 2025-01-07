@@ -59,8 +59,10 @@ class RemoteController(
 
 
     @MessageMapping("/timer")
-    fun triggerTimer(@Header("roomId") roomId: String, timerOn: Boolean) {
+    fun triggerTimer(@Header("roomId") roomId: String, timerRequest: TimerRequest) {
+        val result = remoteService.setTimer(roomId, timerRequest)
+
         val destination = "/topic/remote/${roomId}/timer"
-        messagingTemplate.convertAndSend(destination, timerOn)
+        messagingTemplate.convertAndSend(destination, result)
     }
 }

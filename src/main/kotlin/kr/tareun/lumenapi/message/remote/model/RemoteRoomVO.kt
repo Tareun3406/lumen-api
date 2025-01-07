@@ -10,7 +10,8 @@ data class RemoteRoomVO(
     val playerInviteCode: String,
     val observerInviteCode: String,
     var board: BoardVO,
-    var lastUpdateTime: LocalDateTime
+    var lastUpdateTime: LocalDateTime,
+    val timer: RoomTimerInfo = RoomTimerInfo(),
 ) {
     fun needDelete(thresholdMinutes: Long): Boolean {
         val thresholdTime = LocalDateTime.now().minusMinutes(thresholdMinutes)
