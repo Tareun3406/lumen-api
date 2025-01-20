@@ -31,7 +31,13 @@ data class BoardVO(
     data class Character(
         val name: CharacterName,
         val portrait: String,
+        val hp: Hp,
         val tokens: List<Token>
+    )
+
+    data class Hp(
+        val maxHp: Int,
+        val hpHand: List<List<Int>>
     )
 
     data class Token(
