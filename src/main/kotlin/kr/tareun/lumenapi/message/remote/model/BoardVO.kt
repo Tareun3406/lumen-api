@@ -65,6 +65,8 @@ data class BoardVO(
         @JsonProperty("레브") REB,
         @JsonProperty("타오") TAO,
         @JsonProperty("리타") RITA,
+        @JsonProperty("린") LIN,
+        @JsonProperty("요한") JOHN,
         @JsonProperty("선택없음") NONE
     }
 }
